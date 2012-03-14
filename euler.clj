@@ -113,15 +113,10 @@
   
 
 ; problem 8
-(defn product
-  [numb]
-  (reduce (fn[memo f] (* memo f)) 1 (map #(Integer/parseInt (str %)) (seq numb))))
-
-(println (product "12345"))
-
 (defn greatest-product
-  [b]
-  (let [biggie "73167176531330624919225119674426574742355349194934
+  [memo start end]
+  (let [biggie (clojure.string/split (clojure.string/replace 
+              "73167176531330624919225119674426574742355349194934
                96983520312774506326239578318016984801869478851843
                85861560789112949495459501737958331952853208805511
                12540698747158523863050715693290963295227443043557
@@ -140,12 +135,30 @@
                07198403850962455444362981230987879927244284909188
                84580156166097919133875499200524063689912560717606
                05886116467109405077541002256983155200055935729725
-               71636269561882670428252483600823257530420752963450"]
-))
+               71636269561882670428252483600823257530420752963450" #"[^\w]" "") #"")]
+    (if (= 1000 end)
+      (apply max memo)
+      (recur 
+        (concat memo (list (reduce * (map #(Integer/parseInt %) (subvec biggie start end))))) 
+        (inc start) (inc end)))))
 
-
+(deftest test-biggie
+  (is (= 40824 (greatest-product (list) 1 6))))
 ; /problem 8
 
+
+; problem 9
+(defn sums
+  [n]
+  (filter (fn[g] (<= (second g) (first g))) 
+    (reduce (fn[memo f] (conj memo (list f (- n f)))) (list) (range 1 (inc n)))))
+
+(defn pyth-triplet
+  [n]
+)
+
+(println (sums 11))
+; /problem 9
 
 
 (run-all-tests #"clojure.test.euler")

@@ -148,16 +148,46 @@
 
 
 ; problem 9
+(defn dedupe
+  [el]
+  (apply list (set el)))
+
 (defn sums
   [n]
-  (filter (fn[g] (<= (second g) (first g))) 
-    (reduce (fn[memo f] (conj memo (list f (- n f)))) (list) (range 1 (inc n)))))
+  (->>
+    (reduce (fn[memo f] (conj memo (list f (- n f)))) (list) (range 1 (inc n)))
+    (map #(sort %))
+    (dedupe) ))
 
+(defn to-ternary
+  [n]
+  (map #(concat (list (first n)) %) (sums (second n))))
+
+(defn is-triplet?
+  [triplet]
+  (let [sorted (reverse (sort triplet))]
+    (let [c (first sorted)]
+      (let [b (first (rest sorted))]
+        (let [a (second (rest sorted))]
+          (= (* c c) (+ (* b b) (* a a))))))))
+
+; runs in 8 secs
 (defn pyth-triplet
   [n]
-)
+  (->>
+  (reduce (fn[memo f] (lazy-cat memo (to-ternary f))) (list) (sums n))
+  (map #(sort %))
+  (dedupe)
+  (filter #(is-triplet? %))
+  (map #(* (nth % 0) (nth % 1) (nth % 2)))
+  (apply max) ))
 
-(println (sums 11))
+(deftest test-is-triplet?
+  (is (= false (is-triplet? (list 3 2 4))))
+  (is (= true (is-triplet? (list 4 3 5)))))
+
+(deftest test-pyth-triplet
+  (is (= 31875000 (pyth-triplet 1000))))
 ; /problem 9
 
 

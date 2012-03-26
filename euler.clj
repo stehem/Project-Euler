@@ -191,4 +191,38 @@
 ; /problem 9
 
 
+; problem 10
+; this uses the Sieve of Eratosthenes to generate prime numbers, it is not the "true" sieve because
+; it uses trial divisions but thanks to some decent optimizing it calculates and sums all the primes
+; under 2M in about 30 secs. There is still ample room for optimizing, i have seen a couple Clojure
+; exemples under 1 sec, but that will do for now.
+;
+; http://en.wikipedia.org/wiki/Sieve_of_Eratosthenes
+
+(defn crosser
+  [mem i]
+  (filter #(and (= 0 (rem % i)) (not= % i)) (drop i mem)))
+
+(defn remover
+  [li1 li2]
+  (if (empty? li2)
+    li1
+    (recur (disj li1 (first li2)) (rest li2))))
+
+(defn sieve
+  [n memo done]
+    (let [next-number (first (drop (count done) memo))]
+    (if (> next-number (Math/sqrt n))
+      memo
+      (recur n (remover memo (crosser memo next-number)) (concat done (list next-number))))))
+
+(defn lotsa-primes
+  [n]
+  (reduce + (sieve n (apply sorted-set (range 2 (+ 1 n))) (list))))
+
+(deftest test-lotsa-primes
+  (is (= 142913828922 (lotsa-primes 2000000))))
+; /problem 10
+
+
 (run-all-tests #"clojure.test.euler")

@@ -248,10 +248,9 @@
     20 69 36 41 72 30 23 88 34 62 99 69 82 67 59 85 74 04 36 16
     20 73 35 29 78 31 90 01 74 31 49 71 48 86 81 16 23 57 05 54
     01 70 54 71 83 51 54 69 16 92 33 48 61 43 52 01 89 19 67 48" #"\s+")]
-      biggie
+      (map-indexed list biggie)
   ))
 
-;(println grid )
 
 (defn indexes
   [i]
@@ -263,16 +262,16 @@
   (let [dia-up-left (list i (- i 21) (- i 42) (- i 63))]
   (let [dia-down-right (list i (+ i 21 ) (+ i 42) (+ i 63))]
   (let [dia-down-left (list i (+ i 19 ) (+ i 38) (+ i 57))]
-    (list hor-right hor-left ver-up ver-down dia-up-right dia-up-left dia-down-right dia-down-left))))))))))
+    (remove (fn[x] (some #(> % 399) x))
+      (remove (fn[x] (some #(> 0 %) x))
+        (list hor-right hor-left ver-up ver-down dia-up-right dia-up-left 
+          dia-down-right dia-down-left))))))))))))
 
-(println (indexes 44))
 (defn product
   [lis]
-  (if (some #(> 0 %) lis)
-    0
-    (reduce * 
-      (reduce (fn[memo f] (concat memo (list (Integer/parseInt(get grid f))))) 
-        (list) lis))))
+    (reduce *
+      (reduce (fn[memo f] (concat memo (list (Integer/parseInt (second (nth grid f))))))
+        (list) lis)))
 
 (defn products
   [n]
@@ -282,15 +281,13 @@
     (indexes n)))
 
 (def grid-products
-  (reduce
-    (fn[memo f] (concat memo (products (.indexOf grid f))))
-    (list)
-    grid
-  ) 
-)
+  (apply max
+    (reduce
+      (fn[memo f] (concat memo (products (first f))))
+      (list) grid)))
 
-
-(println grid-products)
+(deftest test-grid
+  (is (= 70600674 grid-products)))
 ; /problem 11
 
 

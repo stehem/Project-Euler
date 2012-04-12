@@ -458,4 +458,27 @@
   (is (= 837799 (longest-chain 1000000))))
 ; /problem 14
 
+
+; problem 15
+(defn factorial
+  [n]
+  (reduce * (take n (iterate #(+ % 1) 1)))) 
+
+(defn grid-20
+  [n]
+  (/ (factorial (* 2 n)) (* (factorial n) (factorial n))))
+
+(deftest test-grid20
+  (is (= 137846528820 (grid-20 20))))
+; /problem 15
+
+
+; problem 16
+(def pow-1000 
+  (reduce + (map #(Integer/parseInt %) (map #(str %) (seq (str (bigint (.pow (bigint 2) 1000))))))))
+
+(deftest test-pow-1000
+  (is (= 1366 pow-1000)))
+; /problem 16
+
 (run-all-tests #"clojure.test.euler")

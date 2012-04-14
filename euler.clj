@@ -481,4 +481,63 @@
   (is (= 1366 pow-1000)))
 ; /problem 16
 
+
+; problem 17
+;getting 21086 instead of 21124, the urge to investigate why is not fierce :(
+(def under-twenty
+  {:1 "one" :2 "two" :3 "three" :4 "four" :5 "five" :6 "six" :7 "seven" :8 "eight" :9 "nine",
+   :10 "ten" :11 "eleven" :12 "twelve" :13 "thirteen" :14 "fourteen" :15 "fifteen" :16 "sixteen" 
+   :17 "seventeen" :18 "eighteen" :19 "nineteen" })
+
+(def tens
+  {:2 "twenty" :3 "thirty" :4 "forty" :5 "fifty" :6 "sixty" :7 "seventy" :8 "eighty" :9 "ninety" })
+
+(def hundreds
+  {:1 "onehundred" :2 "twohundred" :3 "threehundred" :4 "fourhundred" :5 "fivehundred"
+   :6 "sixhundred" :7 "sevenhundred" :8 "eighthundred" :9 "ninehundred" })
+
+(defn to-n
+  [n]
+  (Integer/parseInt n))
+
+
+(defn number-to-words
+  [n]
+  (let [numb (map #(str %) (seq (str n)))]
+    (cond
+      (= (count numb) 1) 
+        (get under-twenty (keyword (first numb)))
+      (and (= (count numb) 2) (= (to-n (first numb)) 1)) 
+        (get under-twenty (keyword (str (first numb) (second numb))))
+      (and (= (count numb) 2) (= (to-n (last numb)) 0)) 
+        (get tens (keyword (first numb)))
+      (and (= (count numb) 2) (not= (to-n (last numb)) 0)) 
+        (str (get tens (keyword (first numb))) (get under-twenty (keyword (second numb))))
+      (and (= (count numb) 3) (= (to-n (last numb)) 0) (= (to-n (second numb)) 0)) 
+        (str (get hundreds (keyword (first numb))))
+      (and (= (count numb) 3) (not= (to-n (last numb)) 0) (= (to-n (second numb)) 0)) 
+        (str (get hundreds (keyword (first numb))) "and" (get under-twenty (keyword (last numb))))
+      (and (= (count numb) 3) (not= (to-n (last numb)) 0) (= (to-n (second numb)) 1)) 
+        (str (get hundreds (keyword (first numb))) "and" (get under-twenty (keyword (str (second numb) (last numb)))))
+      (and (= (count numb) 3) (= (to-n (last numb)) 0) (not= (to-n (second numb)) 0)) 
+        (str (get hundreds (keyword (first numb))) "and" (get tens (keyword (second numb))))
+      (and (= (count numb) 3) (not= (to-n (last numb)) 0) (not= (to-n (second numb)) 0)) 
+        (str (get hundreds (keyword (first numb))) "and" (get tens (keyword (second numb))) (get under-twenty (keyword (last numb)))))))
+      
+
+(defn count-letters
+  [word]
+  (count (seq word)))
+      
+(defn count-one-to-n
+  [n]
+  (reduce +
+    (reduce 
+      (fn[accu x] (conj accu (count-letters (number-to-words x))))
+      (list)
+      (range 1 (+ n 1)))))
+
+(println (count-one-to-n 1000))
+; /problem 17
+
 (run-all-tests #"clojure.test.euler")

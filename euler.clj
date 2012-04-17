@@ -540,4 +540,78 @@
 (println (count-one-to-n 1000))
 ; /problem 17
 
+
+; problem 18
+(def tree
+  {:1-1 75 :2-1 95 :2-2 64 :3-1 17 :3-2 47 :3-3 82}  
+)
+
+(def leftmost1
+ (into [] (rseq [:1-1 :2-1 :3-1 :4-1]))
+)
+
+(def leftmosttest
+ (into [] (rseq [:1-1 :2-1 :3-2 :4-3]))
+)
+
+(def leftmost3
+ (into [] (rseq [:1-1 :2-2 :3-2]))
+)
+
+(def leftmost4
+ (into [] (rseq [:1-1 :2-2 :3-3]))
+)
+
+(defn to-base
+  [node]
+  (map #(Integer/parseInt %) (clojure.string/split (name node) #"-")))
+
+(defn left-child
+  [node]
+  (let [base (to-base node)]
+    (keyword (str (+ (first base) 1) "-" (second base)))))
+
+(defn right-child
+  [node]
+  (let [base (to-base node)]
+    (keyword (str (+ (first base) 1) "-" (+ (second base) 1)))))
+
+
+(defn paths
+  [path]
+  (loop [p path i 0]
+    (if (= (- (count path) 1) i)
+      path
+    (let [current (nth p i) previous (nth p (+ i 1))]
+      (if (= (left-child previous) current)
+        (assoc p (.indexOf p current) (right-child previous))
+        (recur path (inc i))
+
+)))))
+
+
+(defn find-paths
+  [path]
+  (loop [accu [path]]
+    (let [l (last accu) bl (butlast accu)]
+    (if (= l (last bl))
+      bl
+      (recur (conj accu (paths l)))
+          
+          
+))))
+
+;(println leftmost1)
+;(println (paths leftmost1))
+;(println (paths leftmost2))
+;(println (paths leftmost3))
+(println (paths leftmosttest))
+
+(println (left-child :3-2))
+
+(println (find-paths [:1-1 :2-2 :3-2 :4-2]))
+
+
+; /problem 18
+
 (run-all-tests #"clojure.test.euler")

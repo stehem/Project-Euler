@@ -546,21 +546,43 @@
   {:1-1 75 :2-1 95 :2-2 64 :3-1 17 :3-2 47 :3-3 82}  
 )
 
-(def leftmost1
- (into [] (rseq [:1-1 :2-1 :3-1 :4-1]))
-)
+(def  triangle-18
+  (let [triangle
+   (clojure.string/split
+"75
+95 64
+17 47 82
+18 35 87 10
+20 04 82 47 65
+19 01 23 75 03 34
+88 02 77 73 07 63 67
+99 65 04 28 06 16 70 92
+41 41 26 56 83 40 80 70 33
+41 48 72 33 47 32 37 16 94 29
+53 71 44 65 25 43 91 52 97 51 14
+70 11 33 28 77 73 17 78 39 68 17 57
+91 71 52 38 17 14 91 43 58 50 27 29 48
+63 66 04 68 89 53 67 30 73 16 69 87 40 31
+04 62 98 27 23 09 70 98 73 93 38 53 60 04 23"
+  #"\n+")]
 
-(def leftmosttest
- (into [] (rseq [:1-1 :2-1 :3-2 :4-3]))
-)
+      (let [base 
+      (into []
+      (map #(first %)
+      (map #(list (clojure.string/split (first %) #" "))
+      (into []
+      (map #(list %) triangle)))))]
 
-(def leftmost3
- (into [] (rseq [:1-1 :2-2 :3-2]))
-)
+        (map #(conj (second %) (first %))
+        (map (fn[x] (list (first x) (map (fn[y] (list (+ (.indexOf (second x) y) 1) y)) (second x))))
+        (map #(list (+ (.indexOf base %) 1) %) base)))
 
-(def leftmost4
- (into [] (rseq [:1-1 :2-2 :3-3]))
-)
+)))
+
+(defn leftmost
+  [n]
+  (into [] (reverse (map #(keyword (str % "-1")) (take n (iterate #(+ % 1) 1))))))
+
 
 (defn to-base
   [node]
@@ -576,8 +598,17 @@
   (let [base (to-base node)]
     (keyword (str (+ (first base) 1) "-" (+ (second base) 1)))))
 
+(defn right
+  [node]
+  (let [base (to-base node)]
+    (keyword (str (first base) "-" (+ (second base) 1)))))
 
-(defn paths
+
+(defn add-one
+  [path]
+  (into [] (map #(if (= :1-1 %) % (right %)) path)))
+
+(defn next-path
   [path]
   (loop [p path i 0]
     (if (= (- (count path) 1) i)
@@ -585,31 +616,29 @@
     (let [current (nth p i) previous (nth p (+ i 1))]
       (if (= (left-child previous) current)
         (assoc p (.indexOf p current) (right-child previous))
-        (recur path (inc i))
+        (recur path (inc i)))))))
 
-)))))
-
-
-(defn find-paths
+(defn paths
   [path]
   (loop [accu [path]]
     (let [l (last accu) bl (butlast accu)]
-    (if (= l (last bl))
-      bl
-      (recur (conj accu (paths l)))
-          
-          
-))))
+    (if (= (first (take-last 2 l)) :2-2 )
+      (concat bl (map #(add-one %) bl))
+      (recur (conj accu (next-path l)))))))
 
-;(println leftmost1)
-;(println (paths leftmost1))
-;(println (paths leftmost2))
-;(println (paths leftmost3))
-(println (paths leftmosttest))
+(defn path-sum
+  [path]
+  (reduce + (map #(get tree %) path)))
 
-(println (left-child :3-2))
 
-(println (find-paths [:1-1 :2-2 :3-2 :4-2]))
+(defn paths-sum
+  [paths]
+  (apply max (map #(path-sum %) paths)))
+  
+  
+
+(println (paths-sum (paths (leftmost 3))))
+(println triangle-18)
 
 
 ; /problem 18

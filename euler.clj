@@ -542,10 +542,6 @@
 
 
 ; problem 18
-(def tree
-  {:1-1 75 :2-1 95 :2-2 64 :3-1 17 :3-2 47 :3-3 82}  
-)
-
 (def  triangle-18
   (let [triangle
    (clojure.string/split
@@ -566,6 +562,8 @@
 04 62 98 27 23 09 70 98 73 93 38 53 60 04 23"
   #"\n+")]
 
+
+    ; this part is crap and indexof fucks things up when there are duplicates :-(
       (let [base 
       (into []
       (map #(first %)
@@ -573,15 +571,15 @@
       (into []
       (map #(list %) triangle)))))]
 
+        (reduce (fn[accu x] (conj accu x)) {}
+        (flatten
+        (map (fn[x] (map (fn[y] {(keyword (str (first y) "-" (second y))) (Integer/parseInt (last y))}) x))
+        (map (fn[x] (map (fn[y] (conj y (first x))) (rest x)))
         (map #(conj (second %) (first %))
         (map (fn[x] (list (first x) (map (fn[y] (list (+ (.indexOf (second x) y) 1) y)) (second x))))
-        (map #(list (+ (.indexOf base %) 1) %) base)))
+        (map #(list (+ (.indexOf base %) 1) %) base)))))))
 
 )))
-
-(defn leftmost
-  [n]
-  (into [] (reverse (map #(keyword (str % "-1")) (take n (iterate #(+ % 1) 1))))))
 
 
 (defn to-base
@@ -598,47 +596,40 @@
   (let [base (to-base node)]
     (keyword (str (+ (first base) 1) "-" (+ (second base) 1)))))
 
-(defn right
+
+(defn children
   [node]
-  (let [base (to-base node)]
-    (keyword (str (first base) "-" (+ (second base) 1)))))
+  [(left-child node) (right-child node)])
 
 
-(defn add-one
+(defn increment-path
   [path]
-  (into [] (map #(if (= :1-1 %) % (right %)) path)))
+  (map #(conj path %) (children (last path))))
+  
+(defn join-vectors
+  [cont]
+  (reduce (fn[accu x] (into accu x)) [] cont))
 
-(defn next-path
-  [path]
-  (loop [p path i 0]
-    (if (= (- (count path) 1) i)
-      path
-    (let [current (nth p i) previous (nth p (+ i 1))]
-      (if (= (left-child previous) current)
-        (assoc p (.indexOf p current) (right-child previous))
-        (recur path (inc i)))))))
+(defn find-paths
+  [tree-depth]
+  (loop [paths (increment-path [:1-1]) i 0]
+    (if (= i (- tree-depth 2))
+      paths
+      (recur (join-vectors (map #(increment-path %) paths)) (inc i)))))
 
-(defn paths
-  [path]
-  (loop [accu [path]]
-    (let [l (last accu) bl (butlast accu)]
-    (if (= (first (take-last 2 l)) :2-2 )
-      (concat bl (map #(add-one %) bl))
-      (recur (conj accu (next-path l)))))))
+(deftest test-find-paths
+  (is (= 16384 (count (find-paths 15)))))
+
+(time (find-paths 15))
 
 (defn path-sum
   [path]
-  (reduce + (map #(get tree %) path)))
+  (reduce + (map #(get triangle-18 %) path)))
 
 
 (defn paths-sum
   [paths]
   (apply max (map #(path-sum %) paths)))
-  
-  
-
-(println (paths-sum (paths (leftmost 3))))
-(println triangle-18)
 
 
 ; /problem 18

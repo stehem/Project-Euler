@@ -295,11 +295,10 @@
 ; runs in about 12 secs
 (defn divisors
   [n]
-  (count
-    (reduce
-      (fn[memo f] (if (= 0 (rem n f)) (conj memo f (int (Math/floor (/ n f)))) memo ))
-      (set nil)
-      (range 1 (+ 1 (Math/sqrt n))))))
+  (reduce
+    (fn[memo f] (if (= 0 (rem n f)) (conj memo f (int (Math/floor (/ n f)))) memo ))
+    (sorted-set)
+    (range 1 (+ 1 (Math/sqrt n)))))
 
 (defn triangle
   [n]
@@ -312,7 +311,7 @@
   [n]
   (loop [i 1]
     (let [value (reduce + (triangle i))]
-      (if (> (divisors value) n)
+      (if (> (count (divisors value)) n)
         value
         (recur (inc i))))))
 
@@ -542,6 +541,7 @@
 
 
 ; problem 18
+; runs in about 0.8 sec
 (def  triangle-18
   (let [triangle
    (clojure.string/split
@@ -561,26 +561,8 @@
 63 66 04 68 89 53 67 30 73 16 69 87 40 31
 04 62 98 27 23 09 70 98 73 93 38 53 60 04 23"
   #"\n+")]
-
-
-    ; this part is crap and indexof fucks things up when there are duplicates :-(
-      (let [base 
-      (into []
-      (map #(first %)
-      (map #(list (clojure.string/split (first %) #" "))
-      (into []
-      (map #(list %) triangle)))))]
-
-        (reduce (fn[accu x] (conj accu x)) {}
-        (flatten
-        (map (fn[x] (map (fn[y] {(keyword (str (first y) "-" (second y))) (Integer/parseInt (last y))}) x))
-        (map (fn[x] (map (fn[y] (conj y (first x))) (rest x)))
-        (map #(conj (second %) (first %))
-        (map (fn[x] (list (first x) (map (fn[y] (list (+ (.indexOf (second x) y) 1) y)) (second x))))
-        (map #(list (+ (.indexOf base %) 1) %) base)))))))
-
-)))
-
+    (map (fn[x] (map (fn[y] (Integer/parseInt y)) x) )
+    (map #(clojure.string/split (str %) #" ") triangle))))
 
 (defn to-base
   [node]
@@ -596,11 +578,9 @@
   (let [base (to-base node)]
     (keyword (str (+ (first base) 1) "-" (+ (second base) 1)))))
 
-
 (defn children
   [node]
   [(left-child node) (right-child node)])
-
 
 (defn increment-path
   [path]
@@ -617,21 +597,101 @@
       paths
       (recur (join-vectors (map #(increment-path %) paths)) (inc i)))))
 
-(deftest test-find-paths
-  (is (= 16384 (count (find-paths 15)))))
+(defn find-node-value
+  [node]
+  (let [coord (map #(- (Integer/parseInt %) 1) (clojure.string/split (name node) #"-"))]
+    (nth (nth triangle-18 (first coord)) (second coord))))
 
-(time (find-paths 15))
+(def memo-find-node-value (memoize find-node-value)) 
 
 (defn path-sum
   [path]
-  (reduce + (map #(get triangle-18 %) path)))
-
+  (reduce + (map #(memo-find-node-value %) path)))
 
 (defn paths-sum
   [paths]
   (apply max (map #(path-sum %) paths)))
 
+(deftest test-find-paths
+  (is (= 16384 (count (find-paths 15)))))
 
+(deftest test-triangle-path-sum
+  (is (= 1074 (paths-sum (find-paths 15)))))
 ; /problem 18
+
+
+; problem 19
+(defn in? 
+  [coll item]  
+  (some #(= item %) coll))
+ 
+; no date library is fun :-)
+(defn leap-year?
+  [y]
+  (let [year (into [] (map #(Integer/parseInt (str %)) (take-last 2 (str y))))]
+    (cond
+      (and (= [0 0] year) (= 0 (rem y 400))) true
+      (and (not= [0 0] year) (= 0 (rem y 4))) true
+      :else false )))
+
+(defn number-of-days
+  [date]
+    (let [d (first date) m (second date) y (last date)]
+      (cond
+        (in? [4 6 9 11] m) 30
+        (in? [1 3 5 7 8 10 12] m) 31
+        (in? [2] m) (if (leap-year? y) 29 28) )))
+
+(defn next-sunday 
+  [sunday]
+    (let [d (first sunday) m (second sunday) y (last sunday) nod (number-of-days sunday)]
+      (letfn [(december? [m] (= 12 m))]
+        (if (> (+ d 7) nod)
+          [(- (+ d 7) nod) (if (december? m) 1 (+ m 1)) (if (december? m) (+ y 1) y)]
+          [(+ d 7) m y] ))))
+
+(def first-sundays
+  (loop [sundays [[7 1 1900]]]
+    (let [sunday (last sundays) d (first sunday) m (second sunday) y (last sunday)]
+      (if (and (= y 2000) (= m 12) (>= 24 d))
+        (count (filter #(= 1 (first %)) (remove #(= 1900 (last %)) sundays)))
+        (recur (conj sundays (next-sunday sunday))) ))))
+
+(deftest test-
+  (is (= 171 first-sundays)))
+; /problem 19
+
+
+; problem 20
+(defn factorial-sum
+  [n]
+  (reduce + (map #(Integer/parseInt %) (map #(str %) (seq (str (factorial 100)))))))
+
+(deftest test-
+  (is (= 648 (factorial-sum 100))))
+; /problem 20
+
+
+; problem 21
+(defn amicable-sum
+  [n]
+  (reduce + (butlast (divisors n))))
+
+(defn amicable-sums
+  [n]
+  (let [sums (reduce (fn[accu x] (conj accu [x (amicable-sum x)])) [] (range 1 (+ n 1)))]
+    (->>
+      (map #(if (in? sums (into [] (reverse %))) %) sums)
+      (remove #(= (first %) (second %)))
+      (remove #(= nil %))
+      (map #(first %))
+      (reduce +) )))
+
+(deftest test-amicable-sums
+  (is (= 31626 (amicable-sums 9999))))
+; /problem 21
+
+
+
 
 (run-all-tests #"clojure.test.euler")

@@ -692,6 +692,51 @@
 ; /problem 21
 
 
+; problem 22
+(def names
+  (into [] 
+    (sort 
+      (clojure.string/split 
+        (clojure.string/replace (slurp "names.txt") #"\"" "") #","))))
+
+(def alphabet
+  ["A" "B" "C" "D" "E" "F" "G" "H" "I" "J" "K" "L" "M" "N" "O" "P" "Q" 
+   "R" "S" "T" "U" "V" "W" "X" "Y" "Z"])
+
+(defn alph-value
+  [name]
+  (->>
+    (seq name)
+    (map #(str %))
+    (map #(+ (.indexOf alphabet %) 1)) 
+    (reduce +) ))
+
+(defn alph-position
+  [name]
+  (+ (.indexOf names name) 1))
+
+(defn name-score
+  [name]
+  (* (alph-value name) (alph-position name)))
+
+(def name-scores-sum
+  (reduce + (map #(name-score %) names)))
+
+(deftest test-name-scores-sum
+  (is (= 871198282 name-scores-sum)))
+; /problem 22
+
+
+; problem 23
+(defn is-abondant?
+  [n]
+  (> (reduce + (butlast (divisors n))) n))
+
+(defn abondants
+  [n]
+  (remove #(= nil %) (map #(if (is-abondant? %) %) (range 1 (+ 1 n)))))
+
+(def abondants-memo (memoize abondants))
 
 
 (run-all-tests #"clojure.test.euler")

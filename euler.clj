@@ -728,6 +728,8 @@
 
 
 ; problem 23
+; runs in 50 secs, should refactor to filter out those who can
+; be summed instead of generating all sums
 (defn is-abondant?
   [n]
   (> (reduce + (butlast (divisors n))) n))
@@ -736,7 +738,25 @@
   [n]
   (remove #(= nil %) (map #(if (is-abondant? %) %) (range 1 (+ 1 n)))))
 
-(def abondants-memo (memoize abondants))
+(defn sums 
+  [n]
+  (let [ab (sort (set (abondants n)))]
+  (->>
+    (map (fn[x] (remove (fn[z] (> z n)) (map (fn[y] (+ x y)) ab)) ) ab)
+    (flatten)
+    (distinct)
+    (set) )))
+
+(def memo-sums (memoize sums))
+
+(defn abondants-sum
+  [n]
+  (reduce + (remove #(contains? (memo-sums n) %) (range 1 n))))
+
+(deftest test-abondants-sum
+  (is (= 4179871) (abondants-sum 28183)))
+; /problem 23
+
 
 
 (run-all-tests #"clojure.test.euler")

@@ -758,5 +758,66 @@
 ; /problem 23
 
 
+; problem 24
+
+; runs in 1.5 secs
+; this is an implementaion of the algorithm described at 
+; http://en.wikipedia.org/wiki/Permutation#Generation_in_lexicographic_order
+
+(defn find-k
+  [coll]
+    (loop [k (- (count coll) 2)]
+      (if (= -1 k)
+        nil
+        (if (< (nth coll k) (nth coll (+ k 1)))
+          k
+          (recur (dec k)) ))))
+
+(defn find-l
+  [coll k]
+  (if (= nil k)
+    nil
+    (loop [l (- (count coll) 1)]
+      (if (< (nth coll k) (nth coll l))
+        l
+        (recur (dec l)) ))))
+
+(defn swap
+  [coll k l]
+    (assoc coll k (nth coll l) l (nth coll k)))
+
+(defn rev
+  [coll k]
+  (into (subvec coll 0 (+ k 1)) (reverse (subvec coll (+ k 1)))))
+
+(defn lexi-perms
+  [start stop]
+  (loop [coll start i 1]
+    (let [k (find-k coll) l (find-l coll k)]
+      (if (or (= nil k) (= stop i))
+        (clojure.string/join coll)
+        (recur (rev (swap coll k l) k) (inc i))) )))
+ 
+(deftest test-lexi-perms
+  (is (= "2783915460" (lexi-perms [0 1 2 3 4 5 6 7 8 9] 1000000))))
+; /problem 24
+
+
+
+; problem 25
+; runs in 1.3 secs
+(defn fibonacci2
+  [start]
+  (loop [fibs start i 2]
+    (if (= 1000 (count (seq (str (last fibs)))))
+      i
+      (let [prevs (take-last 2 fibs)]
+        (recur (conj fibs (+ (first prevs) (second prevs))) (inc i)) ))))
+
+(deftest test-fib2
+  (is (= 4782 (fibonacci2 [1 1]))))
+; / problem 25
+
+
 
 (run-all-tests #"clojure.test.euler")
